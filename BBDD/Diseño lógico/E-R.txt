@@ -1,0 +1,25 @@
+https://drawsql.app/draw?t=171777ae-9f37-4b74-8c10-58b4ce71ab57&view=1
+
+
+
+
+https://drawsql.app/teams/quimipapel/diagrams/quimipapel
+
+
+
+
+Explicación:
+
+El diseño lógico se ha realizado a partir del modelo entidad-relación, transformando las entidades en tablas relacionales y definiendo sus claves primarias y foráneas.
+
+Se han definido las siguientes tablas principales:
+- clientes
+- usuarios
+- roles
+- productos
+- pedidos
+- pedido_detalle
+- historial_estado_pedido
+- rutas_reparto
+
+Las relaciones entre tablas permiten garantizar la integridad referencial del sistema.
