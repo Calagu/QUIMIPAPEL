@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane styleClass="page" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.qumi.app.controller.PedidosController">
+    <padding>
+        <Insets top="24" right="28" bottom="28" left="28"/>
+    </padding>
+    <top>
+        <VBox spacing="12">
+            <VBox spacing="5">
+                <Label text="Gestión de pedidos" styleClass="page-title"/>
+                <Label text="Creación, consulta, filtros por fecha/urgencia, cambio de estado y exportación." styleClass="muted"/>
+            </VBox>
+            <HBox spacing="10">
+                <TextField fx:id="searchField" promptText="Buscador avanzado: cliente, producto, dirección o notas" HBox.hgrow="ALWAYS" onAction="#refresh"/>
+                <ComboBox fx:id="estadoFilterCombo" promptText="Estado" prefWidth="150"/>
+                <ComboBox fx:id="urgenciaFilterCombo" promptText="Urgencia" prefWidth="135"/>
+                <DatePicker fx:id="desdePicker" promptText="Desde" prefWidth="130"/>
+                <DatePicker fx:id="hastaPicker" promptText="Hasta" prefWidth="130"/>
+                <Button text="Filtrar" onAction="#refresh" styleClass="secondary-button"/>
+                <Button text="Limpiar" onAction="#clearFilters" styleClass="secondary-button"/>
+                <Button text="Exportar" onAction="#exportCsv" styleClass="secondary-button"/>
+            </HBox>
+        </VBox>
+    </top>
+    <center>
+        <HBox spacing="18">
+            <TableView fx:id="pedidosTable" HBox.hgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="idColumn" text="ID" prefWidth="55"/>
+                    <TableColumn fx:id="clienteColumn" text="Cliente" prefWidth="180"/>
+                    <TableColumn fx:id="productoColumn" text="Producto" prefWidth="170"/>
+                    <TableColumn fx:id="cantidadColumn" text="Cant." prefWidth="60"/>
+                    <TableColumn fx:id="estadoColumn" text="Estado" prefWidth="115"/>
+                    <TableColumn fx:id="urgenciaColumn" text="Urgencia" prefWidth="90"/>
+                    <TableColumn fx:id="fechaPedidoColumn" text="Pedido" prefWidth="95"/>
+                    <TableColumn fx:id="fechaEntregaColumn" text="Entrega" prefWidth="95"/>
+                    <TableColumn fx:id="totalColumn" text="Total" prefWidth="80"/>
+                    <TableColumn fx:id="direccionColumn" text="Dirección" prefWidth="180"/>
+                </columns>
+            </TableView>
+            <VBox spacing="12" prefWidth="330">
+                <VBox spacing="9" styleClass="form-card">
+                    <Label text="Crear pedido" styleClass="section-title"/>
+                    <ComboBox fx:id="clienteCombo" promptText="Cliente" maxWidth="Infinity"/>
+                    <ComboBox fx:id="productoCombo" promptText="Producto" maxWidth="Infinity"/>
+                    <GridPane hgap="8" vgap="8">
+                        <TextField fx:id="cantidadField" promptText="Cantidad" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                        <ComboBox fx:id="urgenciaCombo" promptText="Urgencia" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                        <DatePicker fx:id="fechaEntregaPicker" promptText="Fecha entrega" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="2" maxWidth="Infinity"/>
+                    </GridPane>
+                    <TextArea fx:id="direccionArea" promptText="Dirección de entrega. Si está vacío, usa la del cliente." prefRowCount="2"/>
+                    <TextArea fx:id="notasArea" promptText="Notas internas" prefRowCount="2"/>
+                    <HBox spacing="8">
+                        <Button text="Crear" onAction="#createPedido" styleClass="primary-button" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                        <Button text="Limpiar" onAction="#clearForm" styleClass="secondary-button"/>
+                    </HBox>
+                </VBox>
+                <VBox spacing="9" styleClass="form-card">
+                    <Label text="Cambiar estado" styleClass="section-title"/>
+                    <ComboBox fx:id="cambiarEstadoCombo" promptText="Nuevo estado" maxWidth="Infinity"/>
+                    <TextArea fx:id="notasCambioArea" promptText="Notas o incidencia" prefRowCount="3"/>
+                    <Button text="Actualizar estado" onAction="#updateEstado" styleClass="primary-button" maxWidth="Infinity"/>
+                </VBox>
+            </VBox>
+        </HBox>
+    </center>
+</BorderPane>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.StackPane?>
+
+<BorderPane prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+    <center>
+        <StackPane>
+            <VBox alignment="CENTER" maxWidth="380.0" spacing="16.0" styleClass="card">
+                <padding>
+                    <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
+                </padding>
+                <Label text="QUMI PAPEL" styleClass="title" />
+                <Label text="Gestión de pedidos y reparto" styleClass="subtitle" />
+                <TextField promptText="Usuario" />
+                <PasswordField promptText="Contraseña" />
+                <ComboBox promptText="Rol previsto" prefWidth="320.0" />
+                <Button prefWidth="320.0" text="Entrar" styleClass="primary-button" />
+                <Label text="Boceto Semana 1: login no funcional todavía" styleClass="subtitle" />
+            </VBox>
+        </StackPane>
+    </center>
+</BorderPane>
