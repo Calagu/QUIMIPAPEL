@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane prefHeight="650.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+    <center>
+        <VBox spacing="16.0">
+            <padding><Insets bottom="24" left="24" right="24" top="24" /></padding>
+            <Label text="Vista de reparto - Boceto" styleClass="title" />
+            <HBox spacing="12.0">
+                <ComboBox prefWidth="180.0" promptText="Estado" />
+                <ComboBox prefWidth="180.0" promptText="Urgencia" />
+                <Button text="Filtrar" styleClass="secondary-button" />
+                <Button text="Exportar listado" styleClass="primary-button" />
+            </HBox>
+            <TableView prefHeight="450.0">
+                <columns>
+                    <TableColumn prefWidth="80.0" text="Pedido" />
+                    <TableColumn prefWidth="180.0" text="Cliente" />
+                    <TableColumn prefWidth="240.0" text="Dirección" />
+                    <TableColumn prefWidth="120.0" text="Teléfono" />
+                    <TableColumn prefWidth="120.0" text="Estado" />
+                    <TableColumn prefWidth="120.0" text="Urgencia" />
+                    <TableColumn prefWidth="160.0" text="Acciones" />
+                </columns>
+            </TableView>
+            <HBox spacing="10.0">
+                <Button text="Marcar cargado" styleClass="secondary-button" />
+                <Button text="Marcar entregado" styleClass="primary-button" />
+                <Button text="Registrar incidencia" styleClass="secondary-button" />
+            </HBox>
+        </VBox>
+    </center>
+</BorderPane>

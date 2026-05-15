@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="22" styleClass="page" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.qumi.app.controller.DashboardController">
+    <padding>
+        <Insets top="24" right="28" bottom="28" left="28"/>
+    </padding>
+    <VBox spacing="5">
+        <Label text="Panel general" styleClass="page-title"/>
+        <Label text="Indicadores de prioridad, pedidos pendientes, entregas y control de stock." styleClass="muted"/>
+    </VBox>
+
+    <GridPane hgap="18" vgap="18">
+        <VBox GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="metric-card">
+            <Label text="Pedidos totales" styleClass="metric-title"/>
+            <Label fx:id="totalPedidosLabel" text="0" styleClass="metric-number"/>
+        </VBox>
+        <VBox GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="metric-card">
+            <Label text="Pendientes" styleClass="metric-title"/>
+            <Label fx:id="pendientesLabel" text="0" styleClass="metric-number"/>
+        </VBox>
+        <VBox GridPane.columnIndex="2" GridPane.rowIndex="0" styleClass="metric-card">
+            <Label text="En reparto" styleClass="metric-title"/>
+            <Label fx:id="repartoLabel" text="0" styleClass="metric-number"/>
+        </VBox>
+        <VBox GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="metric-card">
+            <Label text="Entregados" styleClass="metric-title"/>
+            <Label fx:id="entregadosLabel" text="0" styleClass="metric-number"/>
+        </VBox>
+        <VBox GridPane.columnIndex="1" GridPane.rowIndex="1" styleClass="metric-card warning-card">
+            <Label text="Alta prioridad" styleClass="metric-title"/>
+            <Label fx:id="urgentesLabel" text="0" styleClass="metric-number"/>
+        </VBox>
+        <VBox GridPane.columnIndex="2" GridPane.rowIndex="1" styleClass="metric-card danger-card-light">
+            <Label text="Stock bajo" styleClass="metric-title"/>
+            <Label fx:id="stockBajoLabel" text="0" styleClass="metric-number"/>
+        </VBox>
+    </GridPane>
+
+    <VBox spacing="10" styleClass="info-card">
+        <Label text="Resumen de requisitos implementados" styleClass="section-title"/>
+        <Label text="• Login por roles: administrador, comercial, oficina y repartidor."/>
+        <Label text="• Gestión de clientes y productos con alta, edición, baja y buscador avanzado."/>
+        <Label text="• Creación, consulta, filtrado y cambio de estado de pedidos."/>
+        <Label text="• Vista de reparto para preparación, entrega e incidencias."/>
+        <Label text="• Exportación de clientes, productos y pedidos en CSV."/>
+    </VBox>
+
+    <Button text="Actualizar indicadores" onAction="#refresh" styleClass="secondary-button"/>
+</VBox>

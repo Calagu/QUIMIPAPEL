@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane styleClass="page" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.qumi.app.controller.RepartoController">
+    <padding>
+        <Insets top="24" right="28" bottom="28" left="28"/>
+    </padding>
+    <top>
+        <VBox spacing="12">
+            <VBox spacing="5">
+                <Label text="Vista de reparto" styleClass="page-title"/>
+                <Label text="Lista priorizada para preparación, entrega e incidencias de pedidos." styleClass="muted"/>
+            </VBox>
+            <HBox spacing="10">
+                <Button text="Actualizar" onAction="#refresh" styleClass="secondary-button"/>
+                <Button text="Exportar CSV" onAction="#exportCsv" styleClass="secondary-button"/>
+            </HBox>
+        </VBox>
+    </top>
+    <center>
+        <HBox spacing="18">
+            <TableView fx:id="repartoTable" HBox.hgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="idColumn" text="ID" prefWidth="55"/>
+                    <TableColumn fx:id="clienteColumn" text="Cliente" prefWidth="180"/>
+                    <TableColumn fx:id="direccionColumn" text="Dirección" prefWidth="240"/>
+                    <TableColumn fx:id="productoColumn" text="Producto" prefWidth="170"/>
+                    <TableColumn fx:id="cantidadColumn" text="Cant." prefWidth="60"/>
+                    <TableColumn fx:id="urgenciaColumn" text="Urgencia" prefWidth="90"/>
+                    <TableColumn fx:id="estadoColumn" text="Estado" prefWidth="115"/>
+                    <TableColumn fx:id="fechaEntregaColumn" text="Entrega" prefWidth="95"/>
+                </columns>
+            </TableView>
+            <VBox spacing="12" prefWidth="310" styleClass="form-card">
+                <Label text="Control de entrega" styleClass="section-title"/>
+                <Label fx:id="selectedLabel" text="Sin pedido seleccionado" styleClass="muted" wrapText="true"/>
+                <Button text="Enviar a preparación" onAction="#marcarPreparacion" styleClass="secondary-button" maxWidth="Infinity"/>
+                <Button text="Marcar en reparto" onAction="#marcarReparto" styleClass="primary-button" maxWidth="Infinity"/>
+                <Button text="Marcar entregado" onAction="#marcarEntregado" styleClass="success-button" maxWidth="Infinity"/>
+                <TextArea fx:id="incidenciaArea" promptText="Notas de entrega o incidencia" prefRowCount="5"/>
+                <Button text="Registrar incidencia" onAction="#marcarIncidencia" styleClass="danger-button" maxWidth="Infinity"/>
+            </VBox>
+        </HBox>
+    </center>
+</BorderPane>
