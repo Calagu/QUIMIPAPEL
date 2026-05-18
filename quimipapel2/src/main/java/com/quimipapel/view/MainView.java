@@ -1,12 +1,17 @@
 package com.quimipapel.view;
 
+import com.quimipapel.dao.PedidoDAO;
+import com.quimipapel.model.Usuario;
 import com.quimipapel.util.SessionManager;
 import com.quimipapel.util.StyleHelper;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Screen;
@@ -22,6 +27,7 @@ public class MainView {
     private BorderPane root;
     private VBox sidebarItems;
     private String seccionActual = "Inicio";
+    private final PedidoDAO pedidoDAO = new PedidoDAO();
 
     private final Map<String, Supplier<Region>> secciones = new LinkedHashMap<>();
 
@@ -37,12 +43,17 @@ public class MainView {
         root.setCenter(wrapScroll(seccionActual));
         root.setStyle("-fx-background-color:" + StyleHelper.BG_MAIN + ";");
 
+        SessionManager.getInstance().clearSessionListeners();
+        SessionManager.getInstance().addSessionListener(() -> {
+            if (root != null) root.setTop(buildTopbar());
+        });
+
         double sw = Screen.getPrimary().getVisualBounds().getWidth();
         double sh = Screen.getPrimary().getVisualBounds().getHeight();
 
         Scene scene = new Scene(root, sw * 0.88, sh * 0.88);
         stage.setScene(scene);
-        stage.setTitle("QUIMIPAPEL – Gestión DAM v1.3.0");
+        stage.setTitle("QUIMIPAPEL – Gestión DAM v1.3.1");
         stage.setMinWidth(900);
         stage.setMinHeight(600);
         stage.setMaximized(true);
@@ -60,7 +71,7 @@ public class MainView {
             return;
         }
 
-        secciones.put("Inicio", () -> new DashboardView().build());
+        secciones.put("Inicio", () -> new DashboardView(() -> navigateTo("Pedidos")).build());
         secciones.put("Pedidos", () -> new PedidosView().build());
 
         if (sm.isAdmin() || sm.isOficina() || sm.isComercial()) {
@@ -78,7 +89,13 @@ public class MainView {
         secciones.put("Configuración", () -> new ConfiguracionView().build());
     }
 
-    /* ── Sidebar ─────────────────────────────────────────── */
+    private void navigateTo(String nombre) {
+        if (root == null || !secciones.containsKey(nombre)) return;
+        seccionActual = nombre;
+        refreshNavStyles();
+        root.setCenter(wrapScroll(nombre));
+    }
+
     private VBox buildSidebar() {
         VBox sidebar = new VBox();
         sidebar.setPrefWidth(210);
@@ -109,7 +126,7 @@ public class MainView {
         footer.setPadding(new Insets(10, 12, 10, 12));
         footer.setStyle("-fx-background-color:#F3F4F6;-fx-background-radius:8;");
         footer.getChildren().addAll(
-            new Label("Versión 1.3.0") {{ setStyle("-fx-text-fill:" + StyleHelper.TEXT_GRAY + ";-fx-font-size:10;"); }},
+            new Label("Versión 1.3.1") {{ setStyle("-fx-text-fill:" + StyleHelper.TEXT_GRAY + ";-fx-font-size:10;"); }},
             new Label("© 2026 QUIMIPAPEL") {{ setStyle("-fx-text-fill:" + StyleHelper.TEXT_GRAY + ";-fx-font-size:10;"); }}
         );
         VBox.setMargin(footer, new Insets(0, 8, 8, 8));
@@ -134,11 +151,7 @@ public class MainView {
 
         applyNavStyle(item, label, nombre.equals(seccionActual));
 
-        item.setOnMouseClicked(e -> {
-            seccionActual = nombre;
-            refreshNavStyles();
-            root.setCenter(wrapScroll(nombre));
-        });
+        item.setOnMouseClicked(e -> navigateTo(nombre));
         return item;
     }
 
@@ -158,6 +171,7 @@ public class MainView {
     }
 
     private void refreshNavStyles() {
+        if (sidebarItems == null) return;
         sidebarItems.getChildren().forEach(node -> {
             if (node instanceof HBox hb && hb.getChildren().size() >= 2) {
                 Label lbl = (Label) hb.getChildren().get(1);
@@ -179,7 +193,6 @@ public class MainView {
         };
     }
 
-    /* ── Topbar ──────────────────────────────────────────── */
     private HBox buildTopbar() {
         HBox bar = new HBox(14);
         bar.setAlignment(Pos.CENTER_LEFT);
@@ -194,12 +207,12 @@ public class MainView {
 
         Region sp = new Region(); HBox.setHgrow(sp, Priority.ALWAYS);
 
-        Label bell = new Label("🔔");
-        bell.setStyle("-fx-font-size:17;-fx-cursor:hand;");
+        Button bell = new Button("🔔 Notificaciones");
+        bell.setStyle("-fx-background-color:#F9FAFB;-fx-border-color:" + StyleHelper.BORDER + ";-fx-border-radius:8;-fx-background-radius:8;-fx-cursor:hand;-fx-font-size:13;-fx-padding:7 12;");
+        bell.setOnAction(e -> showNotificationsMenu(bell));
 
-        var user = SessionManager.getInstance().getUsuarioActual();
+        Usuario user = SessionManager.getInstance().getUsuarioActual();
         String nombre    = user != null ? user.getNombre()    : "Usuario";
-        String iniciales = user != null ? user.getIniciales() : "??";
         String rol       = user != null ? user.getRol()       : "";
 
         VBox userInfo = new VBox(0);
@@ -210,12 +223,11 @@ public class MainView {
         userInfo.getChildren().addAll(uNombre, uRol);
         userInfo.setAlignment(Pos.CENTER_RIGHT);
 
-        StackPane avatar = StyleHelper.avatar(iniciales, StyleHelper.GREEN, 34);
+        StackPane avatar = buildUserAvatar(user, 34);
 
-        Label logout = new Label("⏏");
-        logout.setStyle("-fx-font-size:15;-fx-cursor:hand;-fx-text-fill:" + StyleHelper.TEXT_GRAY + ";");
-        logout.setTooltip(new Tooltip("Cerrar sesión"));
-        logout.setOnMouseClicked(e -> {
+        Button logout = new Button("Cerrar sesión");
+        logout.setStyle("-fx-background-color:#FEE2E2;-fx-text-fill:#B91C1C;-fx-background-radius:8;-fx-font-weight:bold;-fx-cursor:hand;-fx-font-size:13;-fx-padding:7 12;");
+        logout.setOnAction(e -> {
             SessionManager.getInstance().cerrarSesion();
             new LoginView(stage).show();
         });
@@ -224,7 +236,40 @@ public class MainView {
         return bar;
     }
 
-    /* ── Contenido ───────────────────────────────────────── */
+    private StackPane buildUserAvatar(Usuario user, double size) {
+        if (user != null && user.getFotoPerfilPath() != null && !user.getFotoPerfilPath().isBlank()) {
+            try {
+                ImageView img = new ImageView(new Image(user.getFotoPerfilPath(), size, size, true, true));
+                img.setFitWidth(size);
+                img.setFitHeight(size);
+                Circle clip = new Circle(size / 2, size / 2, size / 2);
+                img.setClip(clip);
+                StackPane sp = new StackPane(img);
+                sp.setMaxSize(size, size);
+                sp.setMinSize(size, size);
+                return sp;
+            } catch (Exception ignored) {}
+        }
+        return StyleHelper.avatar(user != null ? user.getIniciales() : "??", StyleHelper.GREEN, size);
+    }
+
+    private void showNotificationsMenu(Button owner) {
+        ContextMenu menu = new ContextMenu();
+        CustomMenuItem title = new CustomMenuItem(new Label("Notificaciones"));
+        title.setHideOnClick(false);
+        title.getContent().setStyle("-fx-font-weight:bold;-fx-padding:6 10;");
+
+        MenuItem pendientes = new MenuItem("Pedidos pendientes: " + pedidoDAO.countPendientes());
+        MenuItem urgentes = new MenuItem("Pedidos urgentes: " + pedidoDAO.countUrgentes());
+        MenuItem incidencias = new MenuItem("Incidencias: " + pedidoDAO.countIncidencias());
+        MenuItem entregados = new MenuItem("Entregados hoy: " + pedidoDAO.countEntregadosHoy());
+        MenuItem abrirPedidos = new MenuItem("Abrir gestión de pedidos");
+        abrirPedidos.setOnAction(e -> navigateTo("Pedidos"));
+
+        menu.getItems().addAll(title, new SeparatorMenuItem(), pendientes, urgentes, incidencias, entregados, new SeparatorMenuItem(), abrirPedidos);
+        menu.show(owner, javafx.geometry.Side.BOTTOM, 0, 0);
+    }
+
     private ScrollPane wrapScroll(String seccion) {
         Region content = secciones.getOrDefault(seccion,
             () -> new StackPane(new Label("No tienes permiso para acceder a esta sección"))).get();

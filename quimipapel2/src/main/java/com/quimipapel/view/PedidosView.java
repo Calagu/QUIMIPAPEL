@@ -121,7 +121,7 @@ public class PedidosView {
         GridPane cabecera = new GridPane();
         cabecera.setHgap(12); cabecera.setVgap(8);
         String[] colNames = {"ID","Cliente","Fecha","Estado","Urgencia","Reparto","Items","Total","Acciones"};
-        double[] colWidths = {60, 170, 140, 110, 90, 70, 50, 90, 120};
+        double[] colWidths = {60, 170, 140, 110, 90, 70, 50, 90, 170};
         for (int i = 0; i < colNames.length; i++) {
             Label h = new Label(colNames[i]);
             h.setStyle("-fx-text-fill:" + StyleHelper.TEXT_GRAY + ";-fx-font-size:11;-fx-font-weight:bold;");
@@ -170,6 +170,13 @@ public class PedidosView {
             btnVer.setStyle("-fx-background-color:" + StyleHelper.GREEN + "20;-fx-text-fill:" + StyleHelper.GREEN + ";-fx-background-radius:6;-fx-font-size:11;-fx-cursor:hand;-fx-padding:3 10;");
             btnVer.setOnAction(e -> showDetallePedido(p));
             HBox acciones = new HBox(6, btnVer);
+
+            if (SessionManager.getInstance().canEditOrders()) {
+                Button btnEdit = new Button("Editar");
+                btnEdit.setStyle("-fx-background-color:#EEF2FF;-fx-text-fill:#4F46E5;-fx-background-radius:6;-fx-font-size:11;-fx-cursor:hand;-fx-padding:3 10;");
+                btnEdit.setOnAction(e -> showEditPedido(p));
+                acciones.getChildren().add(btnEdit);
+            }
 
             if (SessionManager.getInstance().canDeleteOrders()) {
                 Button btnDel = new Button("✕");
@@ -342,6 +349,92 @@ public class PedidosView {
 
     private double calcularTotal(List<PedidoItem> items) {
         return items.stream().mapToDouble(PedidoItem::getSubtotal).sum();
+    }
+
+
+    private void showEditPedido(Pedido pedido) {
+        Pedido actual = pedidoDAO.findById(pedido.getId());
+        if (actual == null) {
+            alert("No se pudo cargar el pedido.");
+            return;
+        }
+
+        Stage dialog = new Stage();
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.setTitle("Editar pedido " + actual.getIdFormateado());
+
+        VBox form = new VBox(14);
+        form.setPadding(new Insets(24));
+        form.setStyle("-fx-background-color:white;");
+        form.setPrefWidth(520);
+
+        Label title = new Label("Editar pedido " + actual.getIdFormateado());
+        title.setFont(Font.font("System", FontWeight.BOLD, 20));
+
+        List<Cliente> clientes = clienteDAO.findAll();
+        ComboBox<String> cbCliente = StyleHelper.<String>comboBox();
+        cbCliente.setItems(FXCollections.observableArrayList(clientes.stream().map(Cliente::getEmpresa).toList()));
+        cbCliente.setPrefWidth(470);
+        for (int i = 0; i < clientes.size(); i++) {
+            if (clientes.get(i).getId() == actual.getClienteId()) {
+                cbCliente.getSelectionModel().select(i);
+                break;
+            }
+        }
+
+        ComboBox<String> cbEstado = StyleHelper.<String>comboBox();
+        cbEstado.setItems(FXCollections.observableArrayList(estadosPedido()));
+        cbEstado.setValue(actual.getEstado());
+        cbEstado.setPrefWidth(180);
+
+        ComboBox<String> cbUrgencia = StyleHelper.<String>comboBox();
+        cbUrgencia.setItems(FXCollections.observableArrayList("Normal", "Urgente"));
+        cbUrgencia.setValue(actual.getUrgencia());
+        cbUrgencia.setPrefWidth(180);
+
+        CheckBox chkReparto = new CheckBox("Requiere reparto");
+        chkReparto.setSelected(actual.isReparto());
+        chkReparto.setStyle("-fx-font-size:13;");
+
+        TextArea taNotas = new TextArea(actual.getNotas() != null ? actual.getNotas() : "");
+        taNotas.setPromptText("Observaciones del pedido...");
+        taNotas.setPrefRowCount(4);
+        taNotas.setStyle("-fx-background-radius:8;-fx-border-radius:8;-fx-border-color:" + StyleHelper.BORDER + ";-fx-font-size:13;");
+
+        HBox row1 = new HBox(12, vbox("Estado", cbEstado), vbox("Urgencia", cbUrgencia), chkReparto);
+        row1.setAlignment(Pos.CENTER_LEFT);
+
+        HBox botones = new HBox(10);
+        botones.setAlignment(Pos.CENTER_RIGHT);
+        Button btnGuardar = StyleHelper.btnPrimary("Guardar cambios");
+        Button btnCancelar = StyleHelper.btnSecondary("Cancelar");
+        botones.getChildren().addAll(btnCancelar, btnGuardar);
+
+        btnCancelar.setOnAction(e -> dialog.close());
+        btnGuardar.setOnAction(e -> {
+            int idxCliente = cbCliente.getSelectionModel().getSelectedIndex();
+            if (idxCliente < 0) { alert("Selecciona un cliente."); return; }
+            actual.setClienteId(clientes.get(idxCliente).getId());
+            actual.setEstado(cbEstado.getValue());
+            actual.setUrgencia(cbUrgencia.getValue());
+            actual.setReparto(chkReparto.isSelected());
+            actual.setNotas(taNotas.getText());
+
+            if (pedidoDAO.updateCabecera(actual)) {
+                renderTabla(pedidoDAO.findAll());
+                dialog.close();
+            } else {
+                alert("No se pudieron guardar los cambios del pedido.");
+            }
+        });
+
+        form.getChildren().addAll(title,
+            vbox("Cliente", cbCliente),
+            row1,
+            vbox("Observaciones", taNotas),
+            botones);
+        dialog.setScene(new Scene(form));
+        dialog.showAndWait();
     }
 
     private void showDetallePedido(Pedido p) {

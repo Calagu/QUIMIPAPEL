@@ -11,6 +11,7 @@ public class Usuario {
     private String rol;
     private boolean activo;
     private LocalDateTime ultimoAcceso;
+    private String fotoPerfilPath;
 
     public Usuario() {}
 
@@ -42,6 +43,8 @@ public class Usuario {
     public void setActivo(boolean activo) { this.activo = activo; }
     public LocalDateTime getUltimoAcceso() { return ultimoAcceso; }
     public void setUltimoAcceso(LocalDateTime ultimoAcceso) { this.ultimoAcceso = ultimoAcceso; }
+    public String getFotoPerfilPath() { return fotoPerfilPath; }
+    public void setFotoPerfilPath(String fotoPerfilPath) { this.fotoPerfilPath = fotoPerfilPath; }
 
     /** Iniciales para el avatar */
     public String getIniciales() {

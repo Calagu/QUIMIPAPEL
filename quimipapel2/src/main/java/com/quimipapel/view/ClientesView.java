@@ -4,6 +4,7 @@ import com.quimipapel.dao.ClienteDAO;
 import com.quimipapel.model.Cliente;
 import com.quimipapel.util.SessionManager;
 import com.quimipapel.util.StyleHelper;
+import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -14,6 +15,7 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ClientesView {
@@ -21,13 +23,15 @@ public class ClientesView {
     private final ClienteDAO clienteDAO = new ClienteDAO();
     private VBox tablaContainer;
     private TextField searchField;
+    private ComboBox<String> cbCiudad;
+    private ComboBox<String> cbPedidos;
+    private VBox filtrosAvanzados;
 
     public Region build() {
         VBox root = new VBox(20);
         root.setPadding(new Insets(28));
         root.setStyle("-fx-background-color:" + StyleHelper.BG_MAIN + ";");
 
-        // Header
         HBox header = new HBox();
         header.setAlignment(Pos.CENTER_LEFT);
         VBox titleBox = new VBox(4,
@@ -40,35 +44,99 @@ public class ClientesView {
         header.getChildren().addAll(titleBox, sp);
         if (SessionManager.getInstance().canManageClients()) header.getChildren().add(btnNuevo);
 
-        // Buscador
         VBox searchCard = StyleHelper.card(12);
         searchCard.setPadding(new Insets(16));
+        searchCard.setSpacing(12);
+
         HBox searchRow = new HBox(12);
         searchRow.setAlignment(Pos.CENTER_LEFT);
         searchField = StyleHelper.textField("Buscar por nombre, empresa, correo o teléfono...");
-        searchField.setPrefWidth(500);
+        searchField.setPrefWidth(420);
         searchField.setPrefHeight(38);
-        Button btnBuscar = StyleHelper.btnPrimary("Filtros");
-        searchField.setOnKeyReleased(e -> renderTabla(clienteDAO.search(searchField.getText())));
-        searchRow.getChildren().addAll(searchField, btnBuscar);
-        searchCard.getChildren().add(searchRow);
+        Button btnBuscar = StyleHelper.btnPrimary("Buscar");
+        Button btnFiltros = StyleHelper.btnSecondary("Mostrar filtros");
+        Button btnLimpiar = StyleHelper.btnSecondary("Limpiar");
+        searchRow.getChildren().addAll(searchField, btnBuscar, btnFiltros, btnLimpiar);
 
-        // Tabla
+        filtrosAvanzados = new VBox(10);
+        filtrosAvanzados.setVisible(false);
+        filtrosAvanzados.setManaged(false);
+
+        HBox filtrosRow = new HBox(12);
+        filtrosRow.setAlignment(Pos.CENTER_LEFT);
+        cbCiudad = StyleHelper.<String>comboBox();
+        cbCiudad.setPrefWidth(220);
+        cbPedidos = StyleHelper.<String>comboBox();
+        cbPedidos.setPrefWidth(180);
+        cbPedidos.setItems(FXCollections.observableArrayList("Todos", "Con pedidos", "Sin pedidos"));
+        cbPedidos.setValue("Todos");
+        filtrosRow.getChildren().addAll(vbox("Ciudad", cbCiudad), vbox("Pedidos", cbPedidos));
+        filtrosAvanzados.getChildren().add(filtrosRow);
+
+        searchCard.getChildren().addAll(searchRow, filtrosAvanzados);
+
         tablaContainer = new VBox(0);
         VBox tablaCard = StyleHelper.card(12);
         tablaCard.setPadding(new Insets(20));
         tablaCard.getChildren().add(tablaContainer);
 
-        renderTabla(clienteDAO.findAll());
+        cargarCiudades();
+        aplicarFiltros();
+
+        btnBuscar.setOnAction(e -> aplicarFiltros());
+        searchField.setOnAction(e -> aplicarFiltros());
+        searchField.setOnKeyReleased(e -> aplicarFiltros());
+        cbCiudad.setOnAction(e -> aplicarFiltros());
+        cbPedidos.setOnAction(e -> aplicarFiltros());
+        btnFiltros.setOnAction(e -> {
+            boolean mostrar = !filtrosAvanzados.isVisible();
+            filtrosAvanzados.setVisible(mostrar);
+            filtrosAvanzados.setManaged(mostrar);
+            btnFiltros.setText(mostrar ? "Ocultar filtros" : "Mostrar filtros");
+        });
+        btnLimpiar.setOnAction(e -> {
+            searchField.clear();
+            cbCiudad.setValue("Todas las ciudades");
+            cbPedidos.setValue("Todos");
+            aplicarFiltros();
+        });
 
         root.getChildren().addAll(header, searchCard, tablaCard);
         return root;
     }
 
+    private void cargarCiudades() {
+        List<String> ciudades = new ArrayList<>();
+        ciudades.add("Todas las ciudades");
+        for (Cliente c : clienteDAO.findAll()) {
+            if (c.getCiudad() != null && !c.getCiudad().isBlank() && !ciudades.contains(c.getCiudad())) {
+                ciudades.add(c.getCiudad());
+            }
+        }
+        cbCiudad.setItems(FXCollections.observableArrayList(ciudades));
+        cbCiudad.setValue("Todas las ciudades");
+    }
+
+    private void aplicarFiltros() {
+        String q = searchField != null ? searchField.getText() : "";
+        List<Cliente> base = (q == null || q.isBlank()) ? clienteDAO.findAll() : clienteDAO.search(q);
+        List<Cliente> filtrados = new ArrayList<>();
+        String ciudad = cbCiudad != null ? cbCiudad.getValue() : "Todas las ciudades";
+        String pedidos = cbPedidos != null ? cbPedidos.getValue() : "Todos";
+
+        for (Cliente c : base) {
+            boolean okCiudad = ciudad == null || ciudad.equals("Todas las ciudades") || ciudad.equals(c.getCiudad());
+            boolean okPedidos = pedidos == null || pedidos.equals("Todos") ||
+                (pedidos.equals("Con pedidos") && c.getTotalPedidos() > 0) ||
+                (pedidos.equals("Sin pedidos") && c.getTotalPedidos() == 0);
+            if (okCiudad && okPedidos) filtrados.add(c);
+        }
+        renderTabla(filtrados);
+    }
+
     private void renderTabla(List<Cliente> clientes) {
         tablaContainer.getChildren().clear();
 
-        // Cabecera
         GridPane cab = cabecera();
         tablaContainer.getChildren().addAll(cab, StyleHelper.separator());
 
@@ -106,7 +174,8 @@ public class ClientesView {
                     Alert a = new Alert(Alert.AlertType.CONFIRMATION, "¿Eliminar cliente?", ButtonType.YES, ButtonType.NO);
                     if (a.showAndWait().orElse(ButtonType.NO) == ButtonType.YES) {
                         clienteDAO.delete(c.getId());
-                        renderTabla(clienteDAO.findAll());
+                        cargarCiudades();
+                        aplicarFiltros();
                     }
                 });
                 acc.getChildren().addAll(btnEdit, btnDel);
@@ -190,7 +259,8 @@ public class ClientesView {
             nc.setCodigoPostal(tfCP.getText());
             nc.setActivo(true);
             if (cliente == null) clienteDAO.save(nc); else clienteDAO.update(nc);
-            renderTabla(clienteDAO.findAll());
+            cargarCiudades();
+            aplicarFiltros();
             dialog.close();
         });
 

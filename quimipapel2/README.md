@@ -205,3 +205,19 @@ Si la app se ve recortada en Windows con escalado 125 % o 150 %, puedes ejecutar
 ---
 
 © 2026 QUIMIPAPEL – Proyecto DAM
+
+
+## Correcciones v1.3.1
+
+Esta versión corrige problemas de interacción detectados en la app:
+
+- Perfil superior se actualiza al cambiar el nombre en configuración.
+- Botón de cambiar foto funcional en configuración.
+- Preferencias de notificaciones activables/desactivables.
+- Notificaciones de la barra superior con menú desplegable.
+- Botón de cerrar sesión visible y claro.
+- Reparto refresca al marcar entregado y oculta el pedido entregado.
+- Filtros reales en clientes.
+- Edición de pedidos para Administrador y Oficina.
+- Botón "Ver todos" del inicio enlazado a Gestión de Pedidos.
+- Buscador superior eliminado.

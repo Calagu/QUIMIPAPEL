@@ -1,21 +1,31 @@
 package com.quimipapel.view;
 
+import com.quimipapel.dao.NotificationDAO;
 import com.quimipapel.dao.UsuarioDAO;
 import com.quimipapel.model.Usuario;
 import com.quimipapel.util.PasswordUtil;
 import com.quimipapel.util.SessionManager;
 import com.quimipapel.util.StyleHelper;
-import javafx.stage.Stage;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+
+import java.io.File;
+import java.util.Map;
 
 public class ConfiguracionView {
 
     private final UsuarioDAO usuarioDAO = new UsuarioDAO();
+    private final NotificationDAO notificationDAO = new NotificationDAO();
 
     public Region build() {
         VBox root = new VBox(24);
@@ -33,16 +43,12 @@ public class ConfiguracionView {
         String email     = user != null ? user.getEmail()    : "";
         String telefono  = user != null ? user.getTelefono() : "";
         String rol       = user != null ? user.getRol()      : "";
-        String iniciales = user != null ? user.getIniciales(): "??";
 
-        // Dos columnas
         HBox cols = new HBox(20);
 
-        // ─── Columna izquierda ───────────────────────────────
         VBox leftCol = new VBox(20);
         HBox.setHgrow(leftCol, Priority.ALWAYS);
 
-        // Información personal
         VBox infoCard = StyleHelper.card(12);
         infoCard.setPadding(new Insets(20));
         infoCard.setSpacing(16);
@@ -50,7 +56,6 @@ public class ConfiguracionView {
         Label infoTitle = new Label("ℹ Información personal");
         infoTitle.setFont(Font.font("System", FontWeight.BOLD, 15));
 
-        // Campos
         TextField tfNombre   = StyleHelper.textField("Nombre completo");
         tfNombre.setText(nombre); tfNombre.setPrefHeight(38);
         TextField tfEmail    = StyleHelper.textField("correo@empresa.com");
@@ -75,7 +80,6 @@ public class ConfiguracionView {
 
         infoCard.getChildren().addAll(infoTitle, StyleHelper.separator(), grid);
 
-        // Cambiar contraseña
         VBox passCard = StyleHelper.card(12);
         passCard.setPadding(new Insets(20));
         passCard.setSpacing(14);
@@ -99,27 +103,25 @@ public class ConfiguracionView {
 
         passCard.getChildren().addAll(passTitle, StyleHelper.separator(), passGrid, passMsg);
 
-        // Notificaciones
         VBox notifCard = StyleHelper.card(12);
         notifCard.setPadding(new Insets(20));
         notifCard.setSpacing(12);
 
         Label notifTitle = new Label("🔔 Notificaciones");
         notifTitle.setFont(Font.font("System", FontWeight.BOLD, 15));
-        notifCard.getChildren().addAll(notifTitle, StyleHelper.separator());
+        Label notifMsg = new Label("Activa o desactiva tus avisos. Se guarda al instante.");
+        notifMsg.setStyle("-fx-text-fill:" + StyleHelper.TEXT_GRAY + ";-fx-font-size:12;");
+        notifCard.getChildren().addAll(notifTitle, notifMsg, StyleHelper.separator());
 
-        String[][] notifItems = {
-            {"Nuevos pedidos",         "true"},
-            {"Pedidos urgentes",       "true"},
-            {"Incidencias",            "true"},
-            {"Entregas completadas",   "false"},
-            {"Actualizaciones del sistema", "false"}
-        };
-        for (String[] item : notifItems) {
-            notifCard.getChildren().add(notifToggle(item[0], Boolean.parseBoolean(item[1])));
-        }
+        Map<String, Boolean> prefs = user != null ? notificationDAO.findByUsuarioId(user.getId()) : Map.of();
+        notifCard.getChildren().addAll(
+            notifCheck("Nuevos pedidos", "nuevos_pedidos", prefs.getOrDefault("nuevos_pedidos", true), user),
+            notifCheck("Pedidos urgentes", "pedidos_urgentes", prefs.getOrDefault("pedidos_urgentes", true), user),
+            notifCheck("Incidencias", "incidencias", prefs.getOrDefault("incidencias", true), user),
+            notifCheck("Entregas completadas", "entregas_completadas", prefs.getOrDefault("entregas_completadas", false), user),
+            notifCheck("Actualizaciones del sistema", "actualizaciones_sistema", prefs.getOrDefault("actualizaciones_sistema", false), user)
+        );
 
-        // Botones guardar / cancelar
         HBox botones = new HBox(12);
         botones.setAlignment(Pos.CENTER_LEFT);
         Button btnGuardar = StyleHelper.btnPrimary("💾 Guardar cambios");
@@ -128,14 +130,51 @@ public class ConfiguracionView {
         Label saveMsg = new Label("");
         saveMsg.setStyle("-fx-font-size:12;");
 
+        VBox rightCol = new VBox(16);
+        rightCol.setPrefWidth(260);
+        rightCol.setMinWidth(240);
+
+        VBox avatarCard = StyleHelper.card(12);
+        avatarCard.setPadding(new Insets(24));
+        avatarCard.setSpacing(12);
+        avatarCard.setAlignment(Pos.CENTER);
+
+        StackPane[] avCircleRef = new StackPane[] { buildAvatar(user, 72) };
+        Label avNombre = new Label(nombre);
+        avNombre.setFont(Font.font("System", FontWeight.BOLD, 16));
+        Label avRol = new Label(rol);
+        avRol.setStyle("-fx-text-fill:" + StyleHelper.TEXT_GRAY + ";-fx-font-size:13;");
+        Button btnFoto = StyleHelper.btnSecondary("Cambiar foto");
+        btnFoto.setPrefWidth(160);
+        avatarCard.getChildren().addAll(avCircleRef[0], avNombre, avRol, btnFoto);
+
+        btnFoto.setOnAction(e -> {
+            if (user == null) return;
+            FileChooser fc = new FileChooser();
+            fc.setTitle("Seleccionar foto de perfil");
+            fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Imágenes", "*.png", "*.jpg", "*.jpeg", "*.gif"));
+            File file = fc.showOpenDialog(btnFoto.getScene().getWindow());
+            if (file == null) return;
+            user.setFotoPerfilPath(file.toURI().toString());
+            StackPane nuevoAvatar = buildAvatar(user, 72);
+            avatarCard.getChildren().set(0, nuevoAvatar);
+            avCircleRef[0] = nuevoAvatar;
+            SessionManager.getInstance().notifySessionChanged();
+            saveMsg.setText("✓ Foto actualizada en esta sesión.");
+            saveMsg.setStyle("-fx-text-fill:" + StyleHelper.GREEN + ";-fx-font-size:12;");
+        });
+
         btnGuardar.setOnAction(e -> {
             if (user != null) {
                 user.setNombre(tfNombre.getText());
                 user.setEmail(tfEmail.getText());
                 user.setTelefono(tfTelefono.getText());
-                usuarioDAO.update(user);
+                if (!usuarioDAO.update(user)) {
+                    saveMsg.setText("⚠ No se pudieron guardar los datos.");
+                    saveMsg.setStyle("-fx-text-fill:#EF4444;-fx-font-size:12;");
+                    return;
+                }
 
-                // Cambio de contraseña conectado a la base de datos con BCrypt
                 if (!pfNueva.getText().isBlank()) {
                     if (pfActual.getText().isBlank() || !PasswordUtil.verify(pfActual.getText(), user.getPasswordHash())) {
                         passMsg.setText("⚠ La contraseña actual no es correcta.");
@@ -155,6 +194,9 @@ public class ConfiguracionView {
                     passMsg.setStyle("-fx-text-fill:" + StyleHelper.GREEN + ";-fx-font-size:12;");
                 }
 
+                avNombre.setText(user.getNombre());
+                avatarCard.getChildren().set(0, buildAvatar(user, 72));
+                SessionManager.getInstance().notifySessionChanged();
                 saveMsg.setText("✓ Cambios guardados correctamente.");
                 saveMsg.setStyle("-fx-text-fill:" + StyleHelper.GREEN + ";-fx-font-size:12;");
             }
@@ -169,25 +211,6 @@ public class ConfiguracionView {
         botones.getChildren().addAll(btnGuardar, btnCancelar, saveMsg);
         leftCol.getChildren().addAll(infoCard, passCard, notifCard, botones);
 
-        // ─── Columna derecha: avatar + actividad + cerrar sesión ─
-        VBox rightCol = new VBox(16);
-        rightCol.setPrefWidth(260);
-        rightCol.setMinWidth(240);
-
-        VBox avatarCard = StyleHelper.card(12);
-        avatarCard.setPadding(new Insets(24));
-        avatarCard.setSpacing(12);
-        avatarCard.setAlignment(Pos.CENTER);
-
-        StackPane avCircle = StyleHelper.avatar(iniciales, StyleHelper.GREEN, 72);
-        Label avNombre = new Label(nombre);
-        avNombre.setFont(Font.font("System", FontWeight.BOLD, 16));
-        Label avRol = new Label(rol);
-        avRol.setStyle("-fx-text-fill:" + StyleHelper.TEXT_GRAY + ";-fx-font-size:13;");
-        Button btnFoto = StyleHelper.btnSecondary("Cambiar foto");
-        btnFoto.setPrefWidth(160);
-        avatarCard.getChildren().addAll(avCircle, avNombre, avRol, btnFoto);
-
         VBox actCard = StyleHelper.card(12);
         actCard.setPadding(new Insets(20));
         actCard.setSpacing(10);
@@ -196,9 +219,9 @@ public class ConfiguracionView {
         actCard.getChildren().addAll(actTitle, StyleHelper.separator());
 
         String[][] actividades = {
-            {"Inicio de sesión",    "Hoy a las 10:30"},
-            {"Pedido #1250 creado", "Hoy a las 09:15"},
-            {"Perfil actualizado",  "Ayer a las 16:45"}
+            {"Inicio de sesión",    "Hoy"},
+            {"Perfil disponible",   "Ahora"},
+            {"Preferencias",        "Configurables"}
         };
         for (String[] act : actividades) {
             VBox actItem = new VBox(2);
@@ -210,8 +233,7 @@ public class ConfiguracionView {
             actCard.getChildren().add(actItem);
         }
 
-        // Cerrar sesión
-        Button btnLogout = new Button("⏏ Cerrar sesión");
+        Button btnLogout = new Button("Cerrar sesión");
         btnLogout.setPrefWidth(Double.MAX_VALUE);
         btnLogout.setPrefHeight(42);
         btnLogout.setStyle("-fx-background-color:#EF4444;-fx-text-fill:white;-fx-background-radius:8;" +
@@ -229,44 +251,31 @@ public class ConfiguracionView {
         return root;
     }
 
-    // ─── Helpers ────────────────────────────────────────────
-
-    private HBox notifToggle(String label, boolean on) {
-        HBox row = new HBox();
-        row.setAlignment(Pos.CENTER_LEFT);
-        row.setPadding(new Insets(10, 14, 10, 14));
-        row.setStyle("-fx-background-color:#F9FAFB;-fx-background-radius:8;");
-
-        Label lbl = new Label(label);
-        lbl.setStyle("-fx-font-size:13;");
-        Region sp = new Region(); HBox.setHgrow(sp, Priority.ALWAYS);
-
-        // Toggle switch simulado
-        final boolean[] estado = {on};
-        StackPane toggle = buildToggle(on);
-        toggle.setOnMouseClicked(e -> {
-            estado[0] = !estado[0];
-            toggle.getChildren().clear();
-            toggle.getChildren().addAll(buildToggle(estado[0]).getChildren());
-            toggle.setStyle(buildToggle(estado[0]).getStyle());
+    private CheckBox notifCheck(String label, String key, boolean selected, Usuario user) {
+        CheckBox cb = new CheckBox(label);
+        cb.setSelected(selected);
+        cb.setStyle("-fx-font-size:13;-fx-padding:8 10;-fx-background-color:#F9FAFB;-fx-background-radius:8;");
+        cb.setMaxWidth(Double.MAX_VALUE);
+        cb.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            if (user != null) notificationDAO.updatePreference(user.getId(), key, newVal);
         });
-
-        row.getChildren().addAll(lbl, sp, buildToggle(on));
-        return row;
+        return cb;
     }
 
-    private StackPane buildToggle(boolean on) {
-        StackPane track = new StackPane();
-        track.setPrefSize(44, 24);
-        track.setStyle(String.format(
-            "-fx-background-color:%s;-fx-background-radius:12;", on ? StyleHelper.GREEN : "#D1D5DB"));
-        javafx.scene.shape.Circle thumb = new javafx.scene.shape.Circle(10,
-                javafx.scene.paint.Color.WHITE);
-        StackPane.setAlignment(thumb, on ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
-        StackPane.setMargin(thumb, new Insets(0, on ? 2 : 0, 0, on ? 0 : 2));
-        track.getChildren().add(thumb);
-        track.setCursor(javafx.scene.Cursor.HAND);
-        return track;
+    private StackPane buildAvatar(Usuario user, double size) {
+        if (user != null && user.getFotoPerfilPath() != null && !user.getFotoPerfilPath().isBlank()) {
+            try {
+                ImageView img = new ImageView(new Image(user.getFotoPerfilPath(), size, size, true, true));
+                img.setFitWidth(size);
+                img.setFitHeight(size);
+                img.setClip(new Circle(size / 2, size / 2, size / 2));
+                StackPane sp = new StackPane(img);
+                sp.setMinSize(size, size);
+                sp.setMaxSize(size, size);
+                return sp;
+            } catch (Exception ignored) {}
+        }
+        return StyleHelper.avatar(user != null ? user.getIniciales() : "??", StyleHelper.GREEN, size);
     }
 
     private VBox vbox(String lbl, javafx.scene.Node field) {

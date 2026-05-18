@@ -18,6 +18,13 @@ import java.util.List;
 public class DashboardView {
 
     private final PedidoDAO pedidoDAO = new PedidoDAO();
+    private final Runnable onVerTodos;
+
+    public DashboardView() { this(null); }
+
+    public DashboardView(Runnable onVerTodos) {
+        this.onVerTodos = onVerTodos;
+    }
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     public Region build() {
@@ -62,6 +69,7 @@ public class DashboardView {
         Region sp = new Region(); HBox.setHgrow(sp, Priority.ALWAYS);
         Label verTodos = new Label("Ver todos");
         verTodos.setStyle("-fx-text-fill:" + StyleHelper.GREEN + ";-fx-cursor:hand;-fx-font-size:13;");
+        verTodos.setOnMouseClicked(e -> { if (onVerTodos != null) onVerTodos.run(); });
         pedidosHeader.getChildren().addAll(pedidosTitle, sp, verTodos);
 
         // Cabecera tabla

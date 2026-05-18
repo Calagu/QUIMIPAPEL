@@ -17,6 +17,7 @@ com\quimipapel\util\DatabaseUtil.class
 com\quimipapel\view\MainView.class
 com\quimipapel\view\RepartoView.class
 com\quimipapel\view\UsuariosView.class
+com\quimipapel\dao\NotificationDAO.class
 com\quimipapel\view\LoginView.class
 com\quimipapel\view\ConfiguracionView.class
 com\quimipapel\dao\ClienteDAO.class

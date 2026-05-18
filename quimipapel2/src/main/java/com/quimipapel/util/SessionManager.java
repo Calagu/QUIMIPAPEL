@@ -2,11 +2,15 @@ package com.quimipapel.util;
 
 import com.quimipapel.model.Usuario;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /** Mantiene la sesión del usuario logueado y centraliza permisos por rol. */
 public class SessionManager {
 
     private static SessionManager instance;
     private Usuario usuarioActual;
+    private final List<Runnable> sessionListeners = new ArrayList<>();
 
     private SessionManager() {}
 
@@ -16,8 +20,30 @@ public class SessionManager {
     }
 
     public Usuario getUsuarioActual() { return usuarioActual; }
-    public void setUsuarioActual(Usuario u) { usuarioActual = u; }
-    public void cerrarSesion() { usuarioActual = null; }
+
+    public void setUsuarioActual(Usuario u) {
+        usuarioActual = u;
+        notifySessionChanged();
+    }
+
+    public void cerrarSesion() {
+        usuarioActual = null;
+        sessionListeners.clear();
+    }
+
+    public void addSessionListener(Runnable listener) {
+        if (listener != null) sessionListeners.add(listener);
+    }
+
+    public void clearSessionListeners() {
+        sessionListeners.clear();
+    }
+
+    public void notifySessionChanged() {
+        for (Runnable listener : new ArrayList<>(sessionListeners)) {
+            try { listener.run(); } catch (Exception ignored) {}
+        }
+    }
 
     public String getRolActual() {
         return usuarioActual != null ? usuarioActual.getRol() : "";
@@ -37,5 +63,6 @@ public class SessionManager {
     public boolean canManageClients() { return isAdmin() || isOficina(); }
     public boolean canCreateOrders() { return isAdmin() || isOficina() || isComercial(); }
     public boolean canDeleteOrders() { return isAdmin() || isOficina(); }
+    public boolean canEditOrders() { return isAdmin() || isOficina(); }
     public boolean canManageDelivery() { return isAdmin() || isOficina() || isRepartidor(); }
 }

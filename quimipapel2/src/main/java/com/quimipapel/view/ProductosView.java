@@ -144,7 +144,6 @@ public class ProductosView {
                 Button btnEdit = new Button("✏");
                 btnEdit.setStyle("-fx-background-color:#EEF2FF;-fx-text-fill:#4F46E5;-fx-background-radius:6;-fx-cursor:hand;-fx-padding:3 8;");
                 btnEdit.setOnAction(ev -> showForm(p));
-
                 Button btnDel = new Button("✕");
                 btnDel.setStyle("-fx-background-color:#FEE2E2;-fx-text-fill:#EF4444;-fx-background-radius:6;-fx-cursor:hand;-fx-padding:3 8;");
                 btnDel.setOnAction(ev -> {
@@ -154,10 +153,9 @@ public class ProductosView {
                         renderTabla(productoDAO.findAll());
                     }
                 });
-
                 acc.getChildren().addAll(btnEdit, btnDel);
             } else {
-                acc.getChildren().add(this.gray("Solo consulta"));
+                acc.getChildren().add(gray("Solo consulta"));
             }
 
             fila.addRow(0, nombreBox, sku, cat, precio, stock, estado, acc);

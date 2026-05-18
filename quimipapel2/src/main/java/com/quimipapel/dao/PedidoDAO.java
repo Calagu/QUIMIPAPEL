@@ -33,6 +33,27 @@ public class PedidoDAO {
         return query(SELECT_BASE + " GROUP BY p.id ORDER BY p.fecha DESC LIMIT " + limit, null);
     }
 
+    public Pedido findById(int id) {
+        List<Object> params = new ArrayList<>();
+        params.add(id);
+        List<Pedido> pedidos = query(SELECT_BASE + " WHERE p.id=? GROUP BY p.id LIMIT 1", params);
+        return pedidos.isEmpty() ? null : pedidos.get(0);
+    }
+
+    public boolean updateCabecera(Pedido p) {
+        String sql = "UPDATE pedidos SET cliente_id=?, estado=?, urgencia=?, reparto=?, notas=? WHERE id=?";
+        try (Connection c = DatabaseUtil.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, p.getClienteId());
+            ps.setString(2, p.getEstado());
+            ps.setString(3, p.getUrgencia());
+            ps.setBoolean(4, p.isReparto());
+            ps.setString(5, p.getNotas());
+            ps.setInt(6, p.getId());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) { e.printStackTrace(); return false; }
+    }
+
     public List<Pedido> filter(String estado, String urgencia, LocalDate desde, LocalDate hasta) {
         return filter(estado, urgencia, desde, hasta, null);
     }

@@ -5,6 +5,8 @@ import com.quimipapel.dao.UsuarioDAO;
 import com.quimipapel.model.Pedido;
 import com.quimipapel.model.Usuario;
 import com.quimipapel.util.StyleHelper;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -13,6 +15,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
 import java.time.format.DateTimeFormatter;
+import javafx.util.Duration;
 import java.util.List;
 
 public class RepartoView {
@@ -38,6 +41,16 @@ public class RepartoView {
         kpis = new HBox(16);
         root.getChildren().addAll(header, kpis, buildPanel());
         refreshData();
+
+        Timeline autoRefresh = new Timeline(new KeyFrame(Duration.seconds(8), e -> {
+            if (root.getScene() != null) refreshData();
+        }));
+        autoRefresh.setCycleCount(Timeline.INDEFINITE);
+        autoRefresh.play();
+        root.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene == null) autoRefresh.stop();
+        });
+
         return root;
     }
 
@@ -156,7 +169,10 @@ public class RepartoView {
 
             btnCargado.setOnAction(e -> cambiarEstado(p, "Cargado"));
             btnRuta.setOnAction(e -> cambiarEstado(p, "En reparto"));
-            btnEntregado.setOnAction(e -> cambiarEstado(p, "Entregado"));
+            btnEntregado.setOnAction(e -> {
+                btnEntregado.setDisable(true);
+                cambiarEstado(p, "Entregado");
+            });
             btnIncidencia.setOnAction(e -> cambiarEstado(p, "Incidencia"));
             acciones.getChildren().addAll(btnCargado, btnRuta, btnEntregado, btnIncidencia);
 
