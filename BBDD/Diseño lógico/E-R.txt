@@ -1,25 +1,88 @@
-https://drawsql.app/draw?t=171777ae-9f37-4b74-8c10-58b4ce71ab57&view=1
+_________________________________
+|EXPLICACIÓN ENTIDAD - RELACIÓN |
+|_______________________________|
 
+ 
+ --- TABLAS Y SUS CAMPOS ---
 
-
-
-https://drawsql.app/teams/quimipapel/diagrams/quimipapel
-
-
-
-
-Explicación:
-
-El diseño lógico se ha realizado a partir del modelo entidad-relación, transformando las entidades en tablas relacionales y definiendo sus claves primarias y foráneas.
-
-Se han definido las siguientes tablas principales:
-- clientes
-- usuarios
-- roles
-- productos
-- pedidos
-- pedido_detalle
-- historial_estado_pedido
-- rutas_reparto
-
-Las relaciones entre tablas permiten garantizar la integridad referencial del sistema.
+-- usuarios --
+  id (PK), nombre, email, telefono,
+  password_hash, rol (Administrador/Comercial/Repartidor/Oficina),
+  activo, ultimo_acceso, created_at
+ 
+-- conductores --
+  id (PK), usuario_id (FK -> usuarios), estado (Disponible/En ruta/Cargando)
+ 
+-- clientes --
+  id (PK), empresa, contacto, telefono, email,
+  direccion, ciudad, codigo_postal, activo, created_at
+ 
+-- categorias --
+  id (PK), nombre
+ 
+-- productos --
+  id (PK), nombre, sku (id único), categoria_id (FK -> categorias),
+  precio, stock, stock_minimo, activo, created_at
+ 
+-- pedidos --
+  id (PK), cliente_id (FK -> clientes), usuario_id (FK -> usuarios),
+  conductor_id (FK -> conductores), fecha,
+  estado (Pendiente/Preparado/Cargado/En reparto/Entregado/Incidencia),
+  urgencia (Normal/Urgente), reparto, notas, total
+ 
+-- pedido_items --
+  id (PK), pedido_id (FK -> pedidos), producto_id (FK -> productos),
+  cantidad, precio_unit
+ 
+-- incidencias --
+  id (PK), pedido_id (FK -> pedidos), descripcion, resuelta, created_at
+ 
+-- actividad_usuario --
+  id (PK), usuario_id (FK -> usuarios), accion, created_at
+ 
+-- notificaciones_config --
+  id (PK), usuario_id (FK -> usuarios),
+  nuevos_pedidos, pedidos_urgentes, incidencias,
+  entregas_completadas, actualizaciones_sistema
+ 
+ 
+--- RELACIONES ---
+ 
+usuarios - conductores         1:1
+  Un usuario puede ser conductor o no serlo.
+  Solo los usuarios con rol Repartidor tienen fila en conductores.
+ 
+usuarios - notificaciones_config    1:1
+  Cada usuario tiene exactamente una configuración de notificaciones.
+ 
+usuarios - pedidos             1:N
+  Un usuario puede crear muchos pedidos.
+ 
+usuarios - actividad_usuario   1:N
+  Un usuario puede generar muchos registros de actividad.
+ 
+conductores - pedidos          1:N
+  Un conductor puede tener asignados muchos pedidos para repartir.
+  El campo conductor_id en pedidos puede ser NULL (pedidos sin reparto).
+ 
+clientes - pedidos             1:N
+  Un cliente puede realizar muchos pedidos a lo largo del tiempo.
+ 
+pedidos - pedido_items         1:N
+  Un pedido contiene uno o varios ítems (líneas de pedido).
+ 
+pedidos - incidencias          1:N
+  Un pedido puede tener una o varias incidencias registradas.
+ 
+pedido_items - productos       N:1
+  Muchos ítems de pedido pueden referirse al mismo producto.
+  (Esta relación junto con pedidos resuelve el N:M entre pedidos y productos)
+ 
+productos - categorias         N:1
+  Muchos productos pertenecen a una misma categoría. 
+  
+pedidos - productos	
+  Relación muchos a muchos mediante la tabla intermedia
+  pedido_items, que guarda además la cantidad y el precio unitario
+  en el momento de la venta.
+ 
