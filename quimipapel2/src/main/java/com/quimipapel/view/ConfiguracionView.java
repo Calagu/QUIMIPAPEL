@@ -20,6 +20,10 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Map;
 
 public class ConfiguracionView {
@@ -155,13 +159,24 @@ public class ConfiguracionView {
             fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Imágenes", "*.png", "*.jpg", "*.jpeg", "*.gif"));
             File file = fc.showOpenDialog(btnFoto.getScene().getWindow());
             if (file == null) return;
-            user.setFotoPerfilPath(file.toURI().toString());
-            StackPane nuevoAvatar = buildAvatar(user, 72);
-            avatarCard.getChildren().set(0, nuevoAvatar);
-            avCircleRef[0] = nuevoAvatar;
-            SessionManager.getInstance().notifySessionChanged();
-            saveMsg.setText("✓ Foto actualizada en esta sesión.");
-            saveMsg.setStyle("-fx-text-fill:" + StyleHelper.GREEN + ";-fx-font-size:12;");
+            try {
+                String rutaGuardada = guardarFotoPerfil(user.getId(), file);
+                if (usuarioDAO.updateFotoPerfil(user.getId(), rutaGuardada)) {
+                    user.setFotoPerfilPath(rutaGuardada);
+                    StackPane nuevoAvatar = buildAvatar(user, 72);
+                    avatarCard.getChildren().set(0, nuevoAvatar);
+                    avCircleRef[0] = nuevoAvatar;
+                    SessionManager.getInstance().notifySessionChanged();
+                    saveMsg.setText("✓ Foto guardada correctamente.");
+                    saveMsg.setStyle("-fx-text-fill:" + StyleHelper.GREEN + ";-fx-font-size:12;");
+                } else {
+                    saveMsg.setText("⚠ No se pudo guardar la foto en la base de datos.");
+                    saveMsg.setStyle("-fx-text-fill:#EF4444;-fx-font-size:12;");
+                }
+            } catch (IOException ex) {
+                saveMsg.setText("⚠ No se pudo copiar la foto: " + ex.getMessage());
+                saveMsg.setStyle("-fx-text-fill:#EF4444;-fx-font-size:12;");
+            }
         });
 
         btnGuardar.setOnAction(e -> {
@@ -260,6 +275,22 @@ public class ConfiguracionView {
             if (user != null) notificationDAO.updatePreference(user.getId(), key, newVal);
         });
         return cb;
+    }
+
+    private String guardarFotoPerfil(int userId, File origen) throws IOException {
+        String nombreOriginal = origen.getName();
+        String extension = ".png";
+        int punto = nombreOriginal.lastIndexOf('.');
+        if (punto >= 0 && punto < nombreOriginal.length() - 1) {
+            extension = nombreOriginal.substring(punto).toLowerCase();
+        }
+
+        Path carpeta = Path.of(System.getProperty("user.home"), ".quimipapel", "profile_photos");
+        Files.createDirectories(carpeta);
+
+        Path destino = carpeta.resolve("usuario_" + userId + extension);
+        Files.copy(origen.toPath(), destino, StandardCopyOption.REPLACE_EXISTING);
+        return destino.toUri().toString();
     }
 
     private StackPane buildAvatar(Usuario user, double size) {

@@ -83,6 +83,17 @@ public class UsuarioDAO {
         } catch (SQLException e) { e.printStackTrace(); return false; }
     }
 
+    public boolean updateFotoPerfil(int id, String fotoPerfilPath) {
+        ensureFotoPerfilColumn();
+        String sql = "UPDATE usuarios SET foto_perfil_path=? WHERE id=?";
+        try (Connection c = DatabaseUtil.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, fotoPerfilPath);
+            ps.setInt(2, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) { e.printStackTrace(); return false; }
+    }
+
     public boolean updatePassword(int id, String newHash) {
         String sql = "UPDATE usuarios SET password_hash=? WHERE id=?";
         try (Connection c = DatabaseUtil.getConnection();
@@ -111,6 +122,18 @@ public class UsuarioDAO {
         } catch (SQLException e) { e.printStackTrace(); return false; }
     }
 
+    private void ensureFotoPerfilColumn() {
+        try (Connection c = DatabaseUtil.getConnection()) {
+            DatabaseMetaData meta = c.getMetaData();
+            try (ResultSet rs = meta.getColumns(c.getCatalog(), null, "usuarios", "foto_perfil_path")) {
+                if (rs.next()) return;
+            }
+            try (Statement st = c.createStatement()) {
+                st.executeUpdate("ALTER TABLE usuarios ADD COLUMN foto_perfil_path VARCHAR(500) NULL AFTER ultimo_acceso");
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+
     // Contadores para Dashboard / Usuarios
     public int countTotal() { return countBy("SELECT COUNT(*) FROM usuarios"); }
     public int countActivos() { return countBy("SELECT COUNT(*) FROM usuarios WHERE activo=1"); }
@@ -135,6 +158,7 @@ public class UsuarioDAO {
         u.setPasswordHash(rs.getString("password_hash"));
         u.setRol(rs.getString("rol"));
         u.setActivo(rs.getBoolean("activo"));
+        try { u.setFotoPerfilPath(rs.getString("foto_perfil_path")); } catch (SQLException ignored) {}
         Timestamp ts = rs.getTimestamp("ultimo_acceso");
         if (ts != null) u.setUltimoAcceso(ts.toLocalDateTime());
         return u;

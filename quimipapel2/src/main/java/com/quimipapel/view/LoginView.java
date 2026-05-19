@@ -9,10 +9,10 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import javafx.scene.text.TextAlignment;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
@@ -25,31 +25,17 @@ public class LoginView {
 
     public void show() {
 
-        /* ── Panel izquierdo verde ── */
+        /* ── Panel izquierdo con imagen corporativa ── */
         VBox left = new VBox(20);
         left.setAlignment(Pos.CENTER);
-        left.setPadding(new Insets(60, 40, 60, 40));
-        left.setStyle("-fx-background-color:" + StyleHelper.GREEN + ";");
-        left.setMinWidth(260);
-        left.setPrefWidth(330);
-        left.setMaxWidth(380);
+        left.setPadding(new Insets(30, 24, 30, 24));
+        left.setStyle("-fx-background-color:#FFFFFF;");
+        left.setMinWidth(360);
+        left.setPrefWidth(480);
+        left.setMaxWidth(560);
 
-        Label logo    = new Label("QUIMIPAPEL");
-        logo.setFont(Font.font("System", FontWeight.BOLD, 26));
-        logo.setTextFill(Color.WHITE);
-
-        Label logoSub = new Label("Gestión integral");
-        logoSub.setFont(Font.font(14));
-        logoSub.setTextFill(Color.web("#D1FAE5"));
-
-        Label tagline = new Label("Sistema de gestión de pedidos,\nclientes, productos y reparto.");
-        tagline.setStyle("-fx-text-fill:white;-fx-font-size:13;");
-        tagline.setWrapText(true);
-        tagline.setTextAlignment(TextAlignment.CENTER);
-        tagline.setAlignment(Pos.CENTER);
-        VBox.setMargin(tagline, new Insets(24, 0, 0, 0));
-
-        left.getChildren().addAll(logo, logoSub, tagline);
+        ImageView loginBanner = buildLoginBanner();
+        left.getChildren().add(loginBanner);
 
         /* ── Panel derecho blanco ── */
         VBox right = new VBox();
@@ -150,6 +136,21 @@ public class LoginView {
         stage.setResizable(true);
         stage.centerOnScreen();
         stage.show();
+    }
+
+
+    private ImageView buildLoginBanner() {
+        ImageView imageView = new ImageView();
+        try {
+            Image image = new Image(getClass().getResourceAsStream("/images/quimipapel-login-banner.png"));
+            imageView.setImage(image);
+        } catch (Exception ignored) {
+            // Si la imagen no existe en recursos, la app no se rompe.
+        }
+        imageView.setPreserveRatio(true);
+        imageView.setFitWidth(430);
+        imageView.setSmooth(true);
+        return imageView;
     }
 
     private Label labelField(String t) {
