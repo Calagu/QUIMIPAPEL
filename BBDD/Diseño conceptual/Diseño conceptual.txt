@@ -1,16 +1,19 @@
-La base de datos del proyecto ha sido diseñada para gestionar el flujo completo de pedidos de una empresa de suministros de oficina.
+ ____________________________________________
+|DISEÑO CONCEPTUAL - BASE DE DATOS QUIMIPAPEL|
+|____________________________________________| 
 
-El sistema permite administrar clientes, productos, usuarios y pedidos de forma centralizada.
-
-Los clientes pueden realizar múltiples pedidos, y cada pedido puede incluir varios productos mediante líneas de detalle.  
-Además, los pedidos pasan por diferentes estados durante su ciclo de vida, quedando registrado cada cambio en un historial de estados.
-
-El sistema también incorpora gestión de usuarios y roles para controlar los permisos y funciones dentro de la aplicación, diferenciando entre administradores, comerciales, oficina y repartidores.
-
-Por otro lado, se incluye un módulo de reparto que permite asignar pedidos a repartidores y controlar el estado de las entregas.
-
-La base de datos también implementa automatizaciones mediante triggers y procedimientos almacenados para gestionar:
-- control automático de stock,
-- cálculo de importes,
-- validaciones,
-- y seguimiento de pedidos.
+La base de datos gestiona el flujo completo de pedidos de una empresa de suministros de papel y oficina.
+ 
+Los clientes realizan pedidos que contienen varios productos. Cada línea de pedido guarda la cantidad y el precio unitario en el momento de la venta.
+ 
+Los pedidos pasan por distintos estados a lo largo de su ciclo de vida:
+Pendiente, Preparado, Cargado, En reparto, Entregado o Incidencia.
+ 
+El sistema descuenta el stock automáticamente al crear cada pedido.
+ 
+Los usuarios tienen cuatro roles (Administrador, Oficina, Comercial y Repartidor) que determinan a qué partes del sistema pueden acceder.
+Los repartidores gestionan el reparto y actualizan el estado de las entregas. Las contraseñas se almacenan cifradas con BCrypt.
+ 
+Además, el sistema registra las incidencias de cada pedido, guarda un historial de actividad por usuario y permite configurar notificaciones
+personalizadas.
+ 
